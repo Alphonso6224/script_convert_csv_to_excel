@@ -8,6 +8,8 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Writer\Csv;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Cell\Cell;
+
 
 
 function convertCsvFilesToExcel($csvFolderPath)
@@ -59,9 +61,39 @@ function convertCsvToExcel($csvFilePath, $excelFolderPath, $excelFileName)
         $csvReader = PhpOffice\PhpSpreadsheet\IOFactory::createReader('Csv');
         $csvReader->setDelimiter(';'); # Définir le délimiteur personnalisé
         $csvReader->setInputEncoding('UTF-8'); # Définir l'encodage du fichier CSV
+        $csvReader->setReadDataOnly(true); // Ne pas essayer d'inférer automatiquement le type de données
+
+        # Charger les données du fichier CSV dans un tableau
+        $lines = file($csvFilePath, FILE_IGNORE_NEW_LINES);
+
+        # Parcourir chaque ligne du fichier CSV
+        foreach ($lines as &$line) {
+            # Diviser la ligne en valeurs individuelles en utilisant le délimiteur ;
+            $values = explode(';', $line);
+
+            # Parcourir chaque valeur dans la ligne
+            foreach ($values as &$value) {
+                # Ajouter d'un espace au début de chaque valeur
+                $value = " $value";
+            }
+
+            # Réassembler les valeurs modifiées en une ligne
+            $line = implode(';', $values);
+        }
+
+        # Réassembler toutes les lignes en une seule chaîne
+        $csvData = implode("\n", $lines);
+
+        # Créer un fichier temporaire avec les données modifiées
+        $tempCsvFilePath = tempnam(sys_get_temp_dir(), 'csv');
+        file_put_contents($tempCsvFilePath, $csvData);
 
         # Charger les données du fichier CSV dans la feuille de calcul
-        $spreadsheet = $csvReader->load($csvFilePath);
+        $spreadsheet = $csvReader->load($tempCsvFilePath);
+
+        # Supprimer le fichier temporaire
+        unlink($tempCsvFilePath);
+
     } catch (\Exception $e) {
         die("Erreur lors de la lecture du fichier CSV : " . $e->getMessage());
     }
@@ -72,7 +104,7 @@ function convertCsvToExcel($csvFilePath, $excelFolderPath, $excelFileName)
 
     # Chemin du dossier où vous souhaitez enregistrer le fichier Excel
     # Nom du fichier Excel à générer avec la date et l'heure actuelle
-    
+
     $excelFilePath = $excelFolderPath . '/' . "$excelFileName" . ".xlsx";
 
     try {
