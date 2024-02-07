@@ -63,30 +63,22 @@ function convertCsvToExcel($csvFilePath, $excelFolderPath, $excelFileName)
         $csvReader->setInputEncoding('UTF-8'); # Définir l'encodage du fichier CSV
         $csvReader->setReadDataOnly(true); // Ne pas essayer d'inférer automatiquement le type de données
 
-        # Charger les données du fichier CSV dans un tableau
-        $lines = file($csvFilePath, FILE_IGNORE_NEW_LINES);
+        # Lire le contenu du fichier CSV dans un tableau ligne par ligne
+        $lines = file($csvFilePath);
 
-        # Parcourir chaque ligne du fichier CSV
+        # Ajouter un préfixe ' uniquement à la première colonne du fichier CSV
         foreach ($lines as &$line) {
-            # Diviser la ligne en valeurs individuelles en utilisant le délimiteur ;
-            $values = explode(';', $line);
-
-            # Parcourir chaque valeur dans la ligne
-            foreach ($values as &$value) {
-                # Ajouter d'un espace au début de chaque valeur
-                $value = " $value";
+            $line = rtrim($line, "\n\r"); // Supprimer les sauts de ligne
+            $values = explode(';', $line); // Diviser la ligne en valeurs par le délimiteur ;
+            if (!empty($values)) {
+                $values[0] = " {$values[0]}"; // Ajouter le préfixe ' à la première colonne
             }
-
-            # Réassembler les valeurs modifiées en une ligne
-            $line = implode(';', $values);
+            $line = implode(';', $values); // Reconstruire la ligne avec les valeurs modifiées
         }
-
-        # Réassembler toutes les lignes en une seule chaîne
-        $csvData = implode("\n", $lines);
 
         # Créer un fichier temporaire avec les données modifiées
         $tempCsvFilePath = tempnam(sys_get_temp_dir(), 'csv');
-        file_put_contents($tempCsvFilePath, $csvData);
+        file_put_contents($tempCsvFilePath, implode("\n", $lines));
 
         # Charger les données du fichier CSV dans la feuille de calcul
         $spreadsheet = $csvReader->load($tempCsvFilePath);
