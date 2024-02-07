@@ -36,4 +36,6 @@ Dans le fichier `convert_csv_to_Excel.php`, vous pouvez modifier les options sui
 - **Délimiteur CSV** : Modifiez la variable `$delimiter` pour définir le délimiteur des fichiers CSV.
 - **Encodage CSV** : Modifiez la variable `$encoding` pour définir l'encodage des fichiers CSV.
 
+## Avertissement
+Le fichier copy est juste là pour le test vous n'êtes pas censé l'exécuter mais vous pouvez le consulter
 ---
